@@ -116,12 +116,19 @@ class App extends Component {
         alert(error);
     };
 
+    updateUsernameHandler = (newUsername) => {
+        // TODO: Apparently this is not a good idea? Should not use nested states in react or something.
+        // https://stackoverflow.com/questions/43040721/how-to-update-nested-state-properties-in-react#51136076
+        this.setState(state => (state.user_data.username = newUsername, state));
+        this.cookies.set('user', this.state.user_data);
+    };
+
     render() {
         let content = !!this.state.isAuthenticated ?
             (
                 <div>
                     <p>Authenticated</p>
-                    <UserComponent user_data={this.state.user_data} />
+                    <UserComponent jwt={this.state.jwt} user_data={this.state.user_data} update_username_handler={this.updateUsernameHandler} />
                     <div>
                         <button onClick={this.logout} className="button">
                             Log out
