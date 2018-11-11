@@ -1,0 +1,12 @@
+.dashboard_component {
+	padding-top: 50px;
+	text-align: center;
+}
+
+#dashboard_link_button {
+	width: 250px;
+	height: 60px;
+	text-align: center;
+	margin-top: 10px;
+	padding-top: 12px;
+}

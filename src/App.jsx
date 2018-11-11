@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 import './App.css';
 import GoogleLogin from "react-google-login";
-import config from './config.json'
-import UserComponent from './components/user/UserComponent'
+import config from './config.json';
+import UserComponent from './components/user/UserComponent';
+import DashboardComponent from './components/dashboard/DashboardComponent';
 import Cookies from 'universal-cookie';
+import { Route } from 'react-router';
+import { Link } from 'react-router-dom';
 
 class App extends Component {
     constructor(props) {
@@ -28,6 +31,7 @@ class App extends Component {
         }
     };
 
+    // TODO: Need to set address to server in config
     verifyJwt = (user, jwt) => {
         const options = {
             method: 'GET',
@@ -124,16 +128,48 @@ class App extends Component {
     };
 
     render() {
+        let topbar = !!this.state.isAuthenticated ? (
+            <div className="topbar">
+                <nav>
+                    <span id="topbar_links">
+                        <Link to="/">Dashboard</Link>
+                    </span>
+                    <span id="topbar_username">Logged in as {this.state.user_data.name} ({this.state.user_data.username})</span>
+                    <button onClick={this.logout} className="button" id="topbar_logout">
+                        Log out
+                    </button>
+                </nav>
+            </div>
+        ) : (
+            <div></div>
+        );
+
+        let main_content = !!this.state.isAuthenticated ? (
+            <div className="main_content">
+                <Route exact
+                    path="/"
+                    component={DashboardComponent}
+                />
+                <Route
+                    path='/settings'
+                    render={
+                        (props) => <UserComponent {...props}
+                                        jwt={this.state.jwt}
+                                        user_data={this.state.user_data}
+                                        update_username_handler={this.updateUsernameHandler}
+                                    />
+                            }
+                />
+            </div>
+        ) : (
+            <div></div>
+        );
+
         let content = !!this.state.isAuthenticated ?
             (
-                <div>
-                    <p>Authenticated</p>
-                    <UserComponent jwt={this.state.jwt} user_data={this.state.user_data} update_username_handler={this.updateUsernameHandler} />
-                    <div>
-                        <button onClick={this.logout} className="button">
-                            Log out
-                        </button>
-                    </div>
+                <div className="wrapper">
+                    {topbar}
+                    {main_content}
                 </div>
             ) :
             (
