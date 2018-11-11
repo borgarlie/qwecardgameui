@@ -4,6 +4,8 @@ import GoogleLogin from "react-google-login";
 import config from './config.json';
 import UserComponent from './components/user/UserComponent';
 import DashboardComponent from './components/dashboard/DashboardComponent';
+import DeckBuilder from './components/deckbuilder/DeckBuilder';
+import GameMenu from './components/game/GameMenu';
 import Cookies from 'universal-cookie';
 import { Route } from 'react-router';
 import { Link } from 'react-router-dom';
@@ -160,6 +162,22 @@ class App extends Component {
                                     />
                             }
                 />
+                <Route
+                    path='/deck'
+                    render={
+                        (props) => <DeckBuilder {...props}
+                                        jwt={this.state.jwt}
+                                    />
+                            }
+                />
+                <Route
+                    path='/game/menu'
+                    render={
+                        (props) => <GameMenu {...props}
+                                        jwt={this.state.jwt}
+                                    />
+                            }
+                />
             </div>
         ) : (
             <div></div>
@@ -173,7 +191,7 @@ class App extends Component {
                 </div>
             ) :
             (
-                <div>
+                <div className="login_button_div">
                     <GoogleLogin
                         clientId={config.GOOGLE_CLIENT_ID}
                         buttonText="Login"

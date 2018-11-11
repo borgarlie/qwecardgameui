@@ -16,16 +16,16 @@ class DashboardComponent extends Component {
                  </Link>
 
                  <br />
-                 <Link to="/">
+                 <Link to="/deck">
                      <Button bsStyle="primary" id="dashboard_link_button">
-                        <p>Dashboard</p>
+                        <p>Deck Builder</p>
                      </Button>
                  </Link>
 
                 <br />
-                 <Link to="/">
+                 <Link to="/game/menu">
                      <Button bsStyle="primary" id="dashboard_link_button">
-                        <p>Dashboard 2</p>
+                        <p>Game Menu</p>
                      </Button>
                  </Link>
             </div>

@@ -67,13 +67,13 @@ class UserComponent extends Component {
     render() {
         let name_content = (
             <div>
-                {this.props.user_data.name}
+                Name: {this.props.user_data.name}
             </div>
         );
 
         let emaiL_content = (
             <div>
-                {this.props.user_data.email}
+                Email: {this.props.user_data.email}
             </div>
         );
 
@@ -90,6 +90,7 @@ class UserComponent extends Component {
         let username_content = (
             <div>
                 Username: {this.props.user_data.username}
+                <br />
                 <br />
                 Update username:
                 <br />

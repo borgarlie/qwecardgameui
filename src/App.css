@@ -35,5 +35,10 @@
 	position: relative;
 	width: 100%;
 	height: 100%;
-	background-color: grey;
+	background-color: #99BBFF;
+}
+
+.login_button_div {
+	padding-top: 300px;
+	text-align: center;
 }
