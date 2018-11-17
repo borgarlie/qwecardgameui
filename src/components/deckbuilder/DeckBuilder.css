@@ -9,7 +9,7 @@
 	float: left;
 	width: 70%;
 	height: 100%;
-	background-color: lightblue;
+	/*background-color: lightblue;*/
 }
 
 .left_wrapper_top {
@@ -40,6 +40,51 @@
 	float: right;
 	width: 30%;
 	height: 100%;
-	background-color: grey;
+	/*background-color: grey;*/
 	padding: 20px 20px 20px 20px;
+}
+
+.decks {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	/*background-color: pink;*/
+}
+
+.deck {
+	position: relative;
+	width: 100%;
+	height: 75px;
+}
+
+.deck_button {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.new_deck_button {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.new_deck_name {
+
+}
+
+.deck_name {
+
+}
+
+.deck_status {
+
+}
+
+.ready {
+
+}
+
+.not_ready {
+
 }
