@@ -13,6 +13,7 @@ class DeckBuilder extends Component {
             current_deck_cards: [], // This should also have an amount variable for each card
             current_deck_name: null,
             current_deck_id: -1,
+            total_cards_in_current_deck: -1,
             deck_is_temp: null,
             deck_building_mode: false,
             current_page: 0
@@ -63,12 +64,41 @@ class DeckBuilder extends Component {
     };
 
     handleChooseCard = (card) => {
-        console.log("Clicked on card");
-        console.log(card);
+        if (!this.state.deck_building_mode) {
+            return;
+        }
+        let deck_copy = this.state.current_deck_cards;
+        let found = false;
+        for (var i = 0; i < deck_copy.length; i++) {
+            if (deck_copy[i].card_id === card.card_id) {
+                // TODO: Remember to set amount variable when fetching deck from db as well
+                if (deck_copy[i].amount === 4) {
+                    return;
+                }
+                deck_copy[i].amount += 1
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            let card_copy = JSON.parse(JSON.stringify(card));
+            card_copy.amount = 1;
+            deck_copy.push(card_copy);
+        }
+        let new_total_cards = this.state.total_cards_in_current_deck + 1;
+        this.setState({
+            current_deck_cards: deck_copy,
+            total_cards_in_current_deck: new_total_cards
+        });
     };
 
     getTotalCards = (deck) => {
-        return 14;
+        // TODO: Call this when initialising list of cards when clicking on a deck
+        let amount = 0;
+        for (var i = 0; i < deck.length; i++) {
+            amount += deck[i].amount;
+        }
+        return amount;
     };
 
     createTempDeck = () => {
@@ -76,14 +106,46 @@ class DeckBuilder extends Component {
             current_deck_cards: [],
             current_deck_name: "temp name (click to change)",
             current_deck_id: -1,
+            total_cards_in_current_deck: 0,
             deck_is_temp: true,
             deck_building_mode: true
         });
     };
 
+    handleGoBackButton = () => {
+        this.setState({
+            current_deck_cards: [],
+            current_deck_name: null,
+            current_deck_id: -1,
+            deck_is_temp: false,
+            deck_building_mode: false
+        });
+    };
+
+    removeCard = (card) => {
+        let deck_copy = this.state.current_deck_cards;
+        for (var i = 0; i < deck_copy.length; i++) {
+            if (deck_copy[i].card_id === card.card_id) {
+                if (deck_copy[i].amount === 1) {
+                    deck_copy.splice(i, 1);
+                } else {
+                    deck_copy[i].amount -= 1;
+                }
+                break;
+            }
+        }
+        let new_total_cards = this.state.total_cards_in_current_deck - 1;
+        this.setState({
+            current_deck_cards: deck_copy,
+            total_cards_in_current_deck: new_total_cards
+        });
+    };
+
     saveDeck = () => {
-        // TODO: How to update "decks" with an additional deck?
         console.log("Saving deck");
+
+        // re-fetch decks after saving
+        this.fetch_decks();
     };
 
     render() {
@@ -102,7 +164,7 @@ class DeckBuilder extends Component {
         let cards_in_page = this.state.all_cards.slice(start, end);
         let cards_to_show = cards_in_page.map((card, index) => {
             let image = "/cards/" + card.image_file;
-            return <img className="card_image" key={index} src={image} onClick={() => this.handleChooseCard(card)} />
+            return <img className="card_image" alt={card.name} key={index} src={image} onClick={() => this.handleChooseCard(card)} />
         });
 
         let available_cards = (
@@ -129,6 +191,8 @@ class DeckBuilder extends Component {
         );
 
         // TODO: Generate decks based on "decks"
+
+        // TODO: Make the list scrollable
 
         // TODO: Extract to sub-component?
         let decks = (
@@ -173,10 +237,68 @@ class DeckBuilder extends Component {
             </div>
         );
 
+        let cards_in_current_deck = this.state.current_deck_cards.map((card, index) => {
+            // return <img className="card_image" key={index} src={image} onClick={() => this.handleChooseCard(card)} />
+            // TODO: Show card image on hover!
+            let image = "/cards/" + card.image_file;
+            return (
+                <Button bsStyle="default" className="card" key={index} onClick={() => this.removeCard(card)}>
+                    <div className="card_name">
+                        {card.name}
+                    </div>
+                    <div className="card_amount">
+                        {card.amount}
+                    </div>
+                    <span className="card_image_hover">
+                        <img className="card_image" src={image} alt={card.name} />
+                    </span>
+                </Button>
+            );
+        });
+
+        if (this.state.current_deck_cards.length === 0) {
+            cards_in_current_deck = (
+                <div className="no_card">
+                    There are no cards in this deck.
+                    <br />
+                    <br />
+                    Click on a card to add it.
+                </div>
+            );
+        }
+
+        let save_deck_button = (this.state.total_cards_in_current_deck === 40) ?
+            (
+                <Button bsStyle="success" className="card_button_save" onClick={this.saveDeck}>
+                    <div className="card_button_name">
+                        Save Deck ({this.state.total_cards_in_current_deck} cards)
+                    </div>
+                </Button>
+            ) : (
+                <Button bsStyle="danger" className="card_button_save" onClick={this.saveDeck}>
+                    <div className="card_button_name">
+                        Save Deck ({this.state.total_cards_in_current_deck} cards)
+                    </div>
+                </Button>
+            );
+
+        // TODO: Make this use actual chosen cards.
+        // TODO: Make list scrollable
         // TODO: Extract to sub-component?
         let current_deck = (
-            <div>
-                current deck
+            <div className="decks">
+                <Button bsStyle="primary" className="card_button" onClick={this.handleGoBackButton}>
+                    <div className="card_button_name">
+                        Back
+                    </div>
+                </Button>
+                <div className="current_deck_name">
+                    <input className="current_deck_name_input" type="text" value={this.state.current_deck_name} onChange={(e) => {this.setState({current_deck_name: e.target.value})}} />
+                </div>
+                <div className="cards">
+                    {cards_in_current_deck}
+                </div>
+                {save_deck_button}
             </div>
         );
 
