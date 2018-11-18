@@ -52,12 +52,43 @@
 	position: relative;
 	width: 100%;
 	height: 75px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.deck_scroll {
+	width: 100%;
+	height: 520px;
+	margin-top: 20px;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 .deck_button {
 	position: relative;
 	width: 100%;
 	height: 100%;
+}
+
+.left_deck_wrapper {
+	position: relative;
+	width: 80%;
+	height: 100%;
+	float: left;
+}
+
+.right_deck_wrapper {
+	position: relative;
+	width: 20%;
+	height: 100%;
+	float: right;
+	text-align: center;
+}
+
+.delete_deck_button {
+	height: 75%;
+	width: 75%;
+	margin-top: 6px;
 }
 
 .new_deck_button {

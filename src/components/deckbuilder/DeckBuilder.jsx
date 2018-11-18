@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './DeckBuilder.css';
 import ReactPaginate from 'react-paginate';
-import { Button } from 'react-bootstrap';
+import { Button, Glyphicon } from 'react-bootstrap';
 
 class DeckBuilder extends Component {
     constructor(props) {
@@ -52,8 +52,42 @@ class DeckBuilder extends Component {
     };
 
     fetch_decks = () => {
-        // TODO: Implement this
-        console.log("Fetching decks");
+        const options = {
+            method: 'GET',
+            mode: 'cors',
+            headers:{
+                'Access-Control-Allow-Origin':'*',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + this.props.jwt
+            }
+        };
+        fetch('http://localhost:1337/deck/me', options)
+            .then(response => {
+                if (!response.ok) {
+                    console.log("Error when getting decks");
+                    return;
+                }
+                response.json().then(message => {
+                    const decks = message.decks;
+
+                    let deck_with_cards = decks.map((deck, index) => {
+                        let cards = deck.cards.map((cardWithAmount, index) => {
+                            let card = cardWithAmount.card;
+                            card.amount = cardWithAmount.amount;
+                            return card;
+                        });
+                        deck.cards = cards;
+                        return deck;
+                    });
+
+                    if (decks) {
+                        this.setState({
+                            decks: deck_with_cards
+                        });
+                    }
+                });
+            });
     };
 
     handlePageClick = (data) => {
@@ -71,7 +105,6 @@ class DeckBuilder extends Component {
         let found = false;
         for (var i = 0; i < deck_copy.length; i++) {
             if (deck_copy[i].card_id === card.card_id) {
-                // TODO: Remember to set amount variable when fetching deck from db as well
                 if (deck_copy[i].amount === 4) {
                     return;
                 }
@@ -93,7 +126,6 @@ class DeckBuilder extends Component {
     };
 
     getTotalCards = (deck) => {
-        // TODO: Call this when initialising list of cards when clicking on a deck
         let amount = 0;
         for (var i = 0; i < deck.length; i++) {
             amount += deck[i].amount;
@@ -143,10 +175,122 @@ class DeckBuilder extends Component {
 
     saveDeck = () => {
         console.log("Saving deck");
-
-        // re-fetch decks after saving
-        this.fetch_decks();
+        // TODO: Remove "temp" and use id < 0 instead
+        // New deck
+        if (this.state.current_deck_id < 0) {
+            this.saveNewDeck();
+        } else {
+            this.updateExistingDeck();
+        }
     };
+
+    saveNewDeck = () => {
+        console.log("Create new deck");
+        const deckBlob = new Blob(
+            [JSON.stringify(
+                {
+                    deck_name: this.state.current_deck_name, 
+                    card_ids: this.state.current_deck_cards
+                }, null, 2)
+            ], {type : 'application/json'});
+        const options = {
+            method: 'POST',
+            body: deckBlob,
+            mode: 'cors',
+            headers:{
+                'Access-Control-Allow-Origin':'*',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + this.props.jwt
+            }
+        };
+        fetch('http://localhost:1337/deck', options)
+            .then(response => {
+                if (!response.ok) {
+                    console.log("Error when saving new deck");
+                    return;
+                }
+                response.json().then(message => {
+                    const deck_id = message.deck_id;
+                    if (deck_id) {
+                        console.log("Saved deck successfully");
+                        this.setState({
+                            current_deck_id: deck_id
+                        });
+                        // re-fetch decks after creating a new deck
+                        this.fetch_decks();
+                    }
+                });
+            });
+    };
+
+    updateExistingDeck = () => {
+        console.log("Update existing deck");
+        const deckBlob = new Blob(
+            [JSON.stringify(
+                {
+                    deck_name: this.state.current_deck_name, 
+                    card_ids: this.state.current_deck_cards
+                }, null, 2)
+            ], {type : 'application/json'});
+        const options = {
+            method: 'PUT',
+            body: deckBlob,
+            mode: 'cors',
+            headers:{
+                'Access-Control-Allow-Origin':'*',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + this.props.jwt
+            }
+        };
+        fetch('http://localhost:1337/deck/id/' + this.state.current_deck_id, options)
+            .then(response => {
+                if (!response.ok) {
+                    console.log("Error when saving new deck");
+                    return;
+                }
+                response.json().then(updated_successfully => {
+                    if (updated_successfully) {
+                        console.log("Updated deck successfully");
+                        // re-fetch decks after creating updating deck
+                        this.fetch_decks();
+                    }
+                });
+            });
+    };
+
+    handleChooseDeck = (deck) => {
+        this.setState({
+            current_deck_cards: deck.cards,
+            current_deck_name: deck.name,
+            current_deck_id: deck.id,
+            total_cards_in_current_deck: this.getTotalCards(deck.cards),
+            deck_is_temp: false,
+            deck_building_mode: true
+        });
+    }
+
+    handleDeleteDeck = (deck) => {
+        console.log("deleting deck with id: " + deck.id);
+        const options = {
+            method: 'DELETE',
+            mode: 'cors',
+            headers:{
+                'Access-Control-Allow-Origin':'*',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + this.props.jwt
+            }
+        };
+        fetch('http://localhost:1337/deck/id/' + deck.id, options)
+            .then(response => {
+                if (!response.ok) {
+                    console.log("Error when deleting deck");
+                }
+                this.fetch_decks();
+            });
+    }
 
     render() {
         let total_cards = this.state.all_cards.length;
@@ -190,9 +334,32 @@ class DeckBuilder extends Component {
             </div>
         );
 
-        // TODO: Generate decks based on "decks"
-
-        // TODO: Make the list scrollable
+        // TODO: Should probably use a modal to "accept" deleting of deck.
+        let user_decks = this.state.decks.map((deck, index) => {
+            let num_cards = this.getTotalCards(deck.cards);
+            let ready = num_cards === 40;
+            let deck_style = ready ? "success" : "danger";
+            let deck_text = ready ? "Ready" : "Not Ready";
+            return (
+                <div className="deck" key={index}>
+                    <div className="left_deck_wrapper">
+                        <Button bsStyle={deck_style} className="deck_button" onClick={() => this.handleChooseDeck(deck)}>
+                                <div className="deck_name">
+                                    {deck.name}
+                                </div>
+                                <div className="deck_status ready">
+                                    {deck_text} ({num_cards} cards)
+                                </div>
+                        </Button>
+                    </div>
+                    <div className="right_deck_wrapper">
+                        <Button bsStyle="default" className="delete_deck_button" onClick={() => this.handleDeleteDeck(deck)} >
+                        <Glyphicon glyph="minus-sign" />
+                        </Button>
+                    </div>
+                </div>
+            );
+        });
 
         // TODO: Extract to sub-component?
         let decks = (
@@ -204,42 +371,13 @@ class DeckBuilder extends Component {
                         </div>
                     </Button>
                 </div>
-                <div className="deck">
-                    <Button bsStyle="success" className="deck_button">
-                        <div className="deck_name">
-                            Some deck name
-                        </div>
-                        <div className="deck_status ready">
-                            Ready
-                        </div>
-                    </Button>
-                </div>
-                <div className="deck">
-                    <Button bsStyle="success" className="deck_button">
-                        <div className="deck_name">
-                            Some deck name 2
-                        </div>
-                        <div className="deck_status ready">
-                            Ready
-                        </div>
-                    </Button>
-                </div>
-                <div className="deck">
-                    <Button bsStyle="info" className="deck_button">
-                        <div className="deck_name">
-                            Some deck name 3
-                        </div>
-                        <div className="deck_status not_ready">
-                            Not Ready (23 cards)
-                        </div>
-                    </Button>
+                <div className="deck_scroll">
+                    {user_decks}
                 </div>
             </div>
         );
 
         let cards_in_current_deck = this.state.current_deck_cards.map((card, index) => {
-            // return <img className="card_image" key={index} src={image} onClick={() => this.handleChooseCard(card)} />
-            // TODO: Show card image on hover!
             let image = "/cards/" + card.image_file;
             return (
                 <Button bsStyle="default" className="card" key={index} onClick={() => this.removeCard(card)}>
@@ -282,8 +420,6 @@ class DeckBuilder extends Component {
                 </Button>
             );
 
-        // TODO: Make this use actual chosen cards.
-        // TODO: Make list scrollable
         // TODO: Extract to sub-component?
         let current_deck = (
             <div className="decks">
