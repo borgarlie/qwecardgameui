@@ -14,14 +14,16 @@ class DeckBuilder extends Component {
             current_deck_name: null,
             current_deck_id: -1,
             total_cards_in_current_deck: -1,
-            deck_is_temp: null,
             deck_building_mode: false,
-            current_page: 0
+            current_page: 0,
+            width: 0
         };
 
         this.fetch_cards();
         this.fetch_decks();
     }
+
+    // TODO: Should the cards be sorted? (current_deck_cards)
 
     fetch_cards = () => {
         const options = {
@@ -139,7 +141,6 @@ class DeckBuilder extends Component {
             current_deck_name: "temp name (click to change)",
             current_deck_id: -1,
             total_cards_in_current_deck: 0,
-            deck_is_temp: true,
             deck_building_mode: true
         });
     };
@@ -149,7 +150,6 @@ class DeckBuilder extends Component {
             current_deck_cards: [],
             current_deck_name: null,
             current_deck_id: -1,
-            deck_is_temp: false,
             deck_building_mode: false
         });
     };
@@ -174,9 +174,6 @@ class DeckBuilder extends Component {
     };
 
     saveDeck = () => {
-        console.log("Saving deck");
-        // TODO: Remove "temp" and use id < 0 instead
-        // New deck
         if (this.state.current_deck_id < 0) {
             this.saveNewDeck();
         } else {
@@ -266,7 +263,6 @@ class DeckBuilder extends Component {
             current_deck_name: deck.name,
             current_deck_id: deck.id,
             total_cards_in_current_deck: this.getTotalCards(deck.cards),
-            deck_is_temp: false,
             deck_building_mode: true
         });
     }
@@ -292,11 +288,20 @@ class DeckBuilder extends Component {
             });
     }
 
+    handleWindowResize = () => {
+        this.setState({
+            width: window.innerWidth
+        });
+    }
+
+    componentDidMount () {
+        this.handleWindowResize();
+        window.addEventListener('resize', this.handleWindowResize);
+    }
+
     render() {
+        let cards_per_page = this.state.width > 1400 ? 8 : 6;
         let total_cards = this.state.all_cards.length;
-        // TODO: Should set this based on screen-size. 6 should be minimum, but could also increase to 8 or more.
-        // TODO: Should also set a maximum screen size to support.
-        let cards_per_page = 6;
         let num_pages = Math.ceil(total_cards/cards_per_page);
 
         let start = this.state.current_page * cards_per_page;
@@ -305,14 +310,46 @@ class DeckBuilder extends Component {
             end = total_cards;
         }
 
-        let cards_in_page = this.state.all_cards.slice(start, end);
-        let cards_to_show = cards_in_page.map((card, index) => {
+        let cards_in_page_top = [];
+        let cards_in_page_bottom = [];
+        let half = cards_per_page / 2;
+
+        if (half >= end-start) {
+            cards_in_page_top = this.state.all_cards.slice(start, end);
+            cards_in_page_bottom = [];
+        } 
+        else {
+            cards_in_page_top = this.state.all_cards.slice(start, end - half);
+            cards_in_page_bottom = this.state.all_cards.slice(start + half, end);
+        }
+
+        let cards_to_show_top = cards_in_page_top.map((card, index) => {
             let image = "/cards/" + card.image_file;
-            return <img className="card_image" alt={card.name} key={index} src={image} onClick={() => this.handleChooseCard(card)} />
+            return (
+                <img className="card_image" alt={card.name} key={index} src={image} onClick={() => this.handleChooseCard(card)} />
+            );
         });
 
+        let cards_to_show_bottom = cards_in_page_bottom.map((card, index) => {
+            let image = "/cards/" + card.image_file;
+            return (
+                <img className="card_image" alt={card.name} key={index} src={image} onClick={() => this.handleChooseCard(card)} />
+            );
+        });
+
+        let cards_to_show = (
+            <div className="cards-to-show">
+                <div className="cards-to-show-top">
+                    {cards_to_show_top}
+                </div>
+                <div className="cards-to-show-bottom">
+                    {cards_to_show_bottom}
+                </div>
+            </div>
+        );
+
         let available_cards = (
-            <div className="left_wrapper">
+            <div className="left_wrapper" ref={this.cards_body_ref}>
                 <div className="left_wrapper_top">
                     {cards_to_show}
                 </div>
@@ -354,7 +391,7 @@ class DeckBuilder extends Component {
                     </div>
                     <div className="right_deck_wrapper">
                         <Button bsStyle="default" className="delete_deck_button" onClick={() => this.handleDeleteDeck(deck)} >
-                        <Glyphicon glyph="minus-sign" />
+                            <Glyphicon glyph="trash" className="delete_button_icon" />
                         </Button>
                     </div>
                 </div>

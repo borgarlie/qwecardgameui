@@ -25,6 +25,10 @@
 	text-align: center;
 }
 
+.pagination>li>a, .pagination>li>span:active:focus {
+	outline: none;
+}
+
 .card_image {
 	margin-top: 15px;
 	margin-bottom: 0px;
@@ -72,23 +76,30 @@
 
 .left_deck_wrapper {
 	position: relative;
-	width: 80%;
+	width: 75%;
 	height: 100%;
 	float: left;
+	margin-left: 14px;
 }
 
 .right_deck_wrapper {
 	position: relative;
 	width: 20%;
 	height: 100%;
-	float: right;
+	float: left;
 	text-align: center;
 }
 
 .delete_deck_button {
 	height: 75%;
 	width: 75%;
-	margin-top: 6px;
+	margin-top: 10px;
+	background-color: #00000000;
+	border: none;
+}
+
+.delete_button_icon {
+	font-size: 20px;
 }
 
 .new_deck_button {
